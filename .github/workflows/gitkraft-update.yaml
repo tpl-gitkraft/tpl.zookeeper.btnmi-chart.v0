@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# GitKraft: source code distribution and customization
+# Copyright 2025 GitKraft Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "GitKraft: update"
+run-name: "GitKraft: update to ${{inputs.upstreamVersion != '' && inputs.upstreamVersion || 'latest' }}"
+on:
+  workflow_dispatch:
+    inputs:
+      upstreamVersion:
+        description: 'Upstream version to import - leave empty for latest'
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/gitkraft-*.yaml
+
+jobs:
+
+  call-update:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.run_number == 1 && github.repository_owner != 'tpl-gitkraft' && github.repository_owner != 'tpl-gitkraft-dev')
+    uses: gitkraft/gitkraft/.github/workflows/gitkraft-update-reusable.yaml@v0
+    with:
+      upstreamVersion: ${{ github.event.inputs.upstreamVersion }}
+      gitkraftToolOwnerAndRepo: gitkraft/gitkraft
+      gitkraftToolRef: v0
+    secrets:
+      token: ${{ secrets.GITKRAFT_DEV_TOKEN || secrets.GITHUB_TOKEN }}
+    permissions: write-all
